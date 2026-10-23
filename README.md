@@ -37,6 +37,18 @@ flowchart LR
 | **6** | **Security Auditor Agent** | Audited AST for code injection, hardened decompression bombs (`Image.MAX_IMAGE_PIXELS = 50M`), issued `SAFE TO COMMIT`. | **APPROVED (Gate 6)** |
 | **7** | **DevOps & Release Agent** | Authored `Dockerfile`, `docker-compose.yml`, Detailed Design Documents (`.docx`, `.pdf`), Customer Handover Guides, and pushed to GitHub. | **APPROVED (Gate 7)** |
 
+### 📜 Multi-Agent Governance Rules (`.gemini` Master Rules Engine)
+
+The development lifecycle was strictly governed by global rule directives (`sdlc_master_framework.md` configured in `.gemini`), enforcing rigorous software engineering discipline, determinism, and zero hallucination:
+
+1. **Strictly One File / One Task at a Time:** The agent is prohibited from batching code generation across multiple files. Every single component must be authored, verified, and confirmed before proceeding.
+2. **Mandatory Human-in-the-Loop (HITL) Quality Gates:** The agent must pause at the conclusion of each phase (Gates 1 through 7) and obtain explicit user sign-off before advancing. Autonomous phase jumping is strictly blocked.
+3. **Strict Role Separation & Code Freeze:** Each agent operates strictly within its designated role. During Phase 5 (QA Testing), a strict code freeze is enforced on `src/` to prevent test-time regressions.
+4. **End-User Centricity Mandate:** All perception metrics and parameter controls must be translated into plain English with bracketed guidance tooltips, eliminating confusing calculus equations or raw developer jargon.
+5. **100% Verified Automated Coverage:** Reaching 100% passing automated test coverage across unit and integration suites is an absolute prerequisite before entering security audits.
+6. **Defense-in-Depth Security:** Every file upload path and memory buffer must undergo SAST scans for code execution vectors, memory leak prevention, and decompression bomb protection (`Image.MAX_IMAGE_PIXELS = 50,000,000`).
+7. **Turnkey Enterprise Documentation:** The DevOps release agent must deliver production containerization alongside formal Detailed Design Documents and Customer Handover Manuals in both `.docx` and `.pdf` formats.
+
 ---
 
 ## 🌟 Key Capabilities
