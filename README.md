@@ -1,5 +1,6 @@
 # Real-Time Deep Learning Road Lane Detection & Autonomous Driving Telemetry System
 
+[![Framework: MASTER_SDLC_AGENTS](https://img.shields.io/badge/Engineered%20With-7--Agent%20MASTER__SDLC__AGENTS-8A2BE2.svg)]()
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.2%2B-ee4c2c.svg)](https://pytorch.org/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.9%2B-green.svg)](https://opencv.org/)
@@ -9,6 +10,32 @@
 [![Security Audit](https://img.shields.io/badge/Security-SAFE%20TO%20COMMIT-success.svg)]()
 
 Production-grade real-time computer vision and deep learning system for road lane detection, vehicle lateral position tracking, and Lane Departure Warning (LDW). Designed for autonomous driving assistance (ADAS) with an intuitive, human-friendly web telemetry dashboard.
+
+---
+
+## 🤖 Engineered via the 7-Agent Master SDLC Framework (`MASTER_SDLC_AGENTS`)
+
+This project was developed, tested, and released end-to-end under the autonomous governance of the **`MASTER_SDLC_AGENTS`** multi-agent engineering framework with strict **Human-in-the-Loop (HITL)** quality gates:
+
+```mermaid
+flowchart LR
+    A["1. Product Manager<br>(PRD.md & Plain Terms)"] --> B["2. Tech Architect<br>(architecture-spec.md)"]
+    B --> C["3. Tech Lead<br>(task-queue.md & DoD)"]
+    C --> D["4. Software Engineer<br>(src/ Implementation)"]
+    D --> E["5. QA Test Engineer<br>(38 Tests 100% Pass)"]
+    E --> F["6. Security Auditor<br>(SAST: SAFE TO COMMIT)"]
+    F --> G["7. DevOps Engineer<br>(Docker & Documentation)"]
+```
+
+| Phase | Autonomous SDLC Agent | Core Mission & Deliverables | HITL Gate Status |
+| :---: | :--- | :--- | :---: |
+| **1** | **Product Manager Agent** | Authored `PRD.md` with functional/non-functional ADAS specs and Section 7 plain-English parameter glossary with bracketed tooltips. | **APPROVED (Gate 1)** |
+| **2** | **Technical Architect Agent** | Authored `architecture-spec.md` with 4-tier perception pipeline, vanishing-point line geometry, and telemetry contracts. | **APPROVED (Gate 2)** |
+| **3** | **Tech Lead Agent** | Authored `task-queue.md` structuring Tasks 1 through 7 with strict data contracts and Definition of Done. | **APPROVED (Gate 3)** |
+| **4** | **Software Engineer Agent** | Implemented `src/utils.py`, `src/detector.py`, and `src/app.py` (ResNet backbone, HLS segmentation, Hough clustering, AR corridor, HUD). | **APPROVED (Gate 4)** |
+| **5** | **QA / Test Engineer Agent** | Authored `tests/` with 38 unit and integration tests (100% passing) and verified all visual benchmark outputs. | **APPROVED (Gate 5)** |
+| **6** | **Security Auditor Agent** | Audited AST for code injection, hardened decompression bombs (`Image.MAX_IMAGE_PIXELS = 50M`), issued `SAFE TO COMMIT`. | **APPROVED (Gate 6)** |
+| **7** | **DevOps & Release Agent** | Authored `Dockerfile`, `docker-compose.yml`, Detailed Design Documents (`.docx`, `.pdf`), Customer Handover Guides, and pushed to GitHub. | **APPROVED (Gate 7)** |
 
 ---
 

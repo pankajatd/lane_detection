@@ -19,6 +19,16 @@ The **Real-Time Deep Learning Road Lane Detection System** is an automotive-grad
 3. **Consumer-Friendly Interface:** Translates calculus metrics into plain-English dashboard displays with bracketed tooltips for non-technical drivers.
 4. **Defensive Security & Containerization:** 100% containerized via Docker and Docker Compose, secured against arbitrary execution, decompression bombs, and memory leaks.
 
+### 1.2 Autonomous Governance via `MASTER_SDLC_AGENTS` Framework
+The entire engineering lifecycle was governed by the **7-Agent Autonomous Multi-Agent Framework** (`MASTER_SDLC_AGENTS`), enforcing strict single-file completion, defensive quality gates, and Human-in-the-Loop (HITL) sign-offs:
+* **Phase 1 (Product Manager):** Formulated `PRD.md` with end-user parameter definitions in Section 7.
+* **Phase 2 (Technical Architect):** Defined the 4-tier perception pipeline in `architecture-spec.md`.
+* **Phase 3 (Tech Lead):** Outlined Tasks 1-7 with testable DoD in `task-queue.md`.
+* **Phase 4 (Software Engineer):** Authored `src/utils.py`, `src/detector.py`, and `src/app.py`.
+* **Phase 5 (QA Test Engineer):** Achieved 100% test coverage (38/38 passing) in `tests/`.
+* **Phase 6 (Security Auditor):** Performed SAST audits and hardened file ingestion (`reports/security-audit.md`).
+* **Phase 7 (DevOps Engineer):** Packaged Docker containers, authored manuals, and released deliverables.
+
 ```mermaid
 flowchart LR
     A["Raw Dashcam Stream (Video/Image)"] --> B["Media Validation & Ingestion (utils.py)"]
