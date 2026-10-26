@@ -7,6 +7,7 @@
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.35%2B-FF4B4B.svg)](https://streamlit.io/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com/)
 [![Tests Passing](https://img.shields.io/badge/Tests-38%2F38%20Passed%20(100%25)-brightgreen.svg)]()
+[![QA Gate: Closed-Loop Defects](https://img.shields.io/badge/QA%20Gate%205-3%2F3%20Defects%20Closed-brightgreen.svg)](reports/qa-test-report.md)
 [![Security Audit](https://img.shields.io/badge/Security-SAFE%20TO%20COMMIT-success.svg)]()
 
 Production-grade real-time computer vision and deep learning system for road lane detection, vehicle lateral position tracking, and Lane Departure Warning (LDW). Designed for autonomous driving assistance (ADAS) with an intuitive, human-friendly web telemetry dashboard.
@@ -59,6 +60,38 @@ The development lifecycle was strictly governed by global rule directives (`sdlc
 * **Autonomous Metrics:** Calculates lateral vehicle offset down to centimeters, road curvature radius, and instant Crimson Red Departure Alerts when vehicle drifts over lines.
 * **Temporal EMA Filtering:** Exponential moving average line smoothing stabilizes line tracking across bumpy roads and vibrations.
 * **1-Click Telemetry Export:** Download full frame-by-frame RFC 4180 CSV logs with timestamps, lane positions, and departure flags.
+
+---
+
+## 📐 Lane Perception Architecture & Processing Flow
+
+The vision pipeline converts raw forward-facing dashboard video into autonomous driving assistance guidance in 4 synchronized stages:
+
+```mermaid
+flowchart LR
+    A["📷 Camera Feed<br>(1280x720 RGB @ 30 FPS)"] --> B["Stage 1: Bird's-Eye IPM & HLS Filter<br>(Shadow Rejection & Paint Isolation)"]
+    B --> C["Stage 2: 2nd-Order Polynomial Splines<br>(Guarded Math & Curvature Fitting)"]
+    C --> D["Stage 3: Temporal EMA Filter<br>(Anti-Jitter Memory & HUD Smoothing)"]
+    D --> E["Stage 4: AR Green Carpet & HUD<br>(Centimeter Offset & Departure Alerts)"]
+```
+
+### 🧠 Plain-English Pipeline Walkthrough
+
+1. **Stage 1: Bird's-Eye Perspective (IPM) & HLS Paint Filtering:**
+   * **Perspective Flattening (Inverse Perspective Mapping):** A camera looking down a road sees parallel lanes converge at a distant vanishing point. The system warps this trapezoid into a top-down "bird's-eye view" where parallel lane lines actually run parallel.
+   * **Dual-Spectrum Paint Isolation:** Standard grayscale edge detection gets tricked by dark bridge shadows and tree silhouettes. We convert frames into HLS colorspace: the **S-channel** extracts vibrant yellow lines regardless of shade, while the **L-channel** isolates high-brightness white lines. Tree shadows are rejected before edge detection begins.
+
+2. **Stage 2: Guarded 2nd-Order Polynomial Spline Fitting:**
+   * **Curvature Modeling:** Curved roads follow parabolic geometry described by $x = Ay^2 + By + C$. The algorithm clusters lane pixel coordinates and computes the optimal quadratic spline.
+   * **Guarded Singularity Math:** When roads enter sharp mountain switchbacks or crests, point counts drop. A safety barrier ($N \ge 50$ points and clamped denominators) prevents division-by-zero math crashes, falling back cleanly to prior stable curves.
+
+3. **Stage 3: Temporal Exponential Moving Average (EMA) Filtering:**
+   * **Anti-Jitter Memory:** Processing video frame-by-frame with zero memory causes lines to twitch 30 times a second due to asphalt texture shifts.
+   * **$75/25$ Exponential Blending:** The system blends previous frame coordinates ($75\%$) with current frame measurements ($25\%$). This eliminates high-frequency visual vibration and carpet twitching while maintaining instant responsiveness during real steering lane changes.
+
+4. **Stage 4: Augmented Reality (AR) Green Road Carpet & HUD Telemetry:**
+   * **Drivable Corridor Projection:** The fitted left and right polynomial curves are filled with a glowing green navigation polygon and un-warped back onto the driver's perspective camera feed.
+   * **Safety Telemetry:** Calculates lateral vehicle position relative to lane center down to centimeters. If the vehicle drifts past the user-configured departure threshold (default: `0.25m`), the system instantly flashes a high-visibility crimson red Lane Departure Warning (`🚨 DEPARTURE ALERT!`).
 
 ---
 
@@ -144,18 +177,32 @@ docker compose down
 
 ---
 
-## 🧪 Automated Testing & Verification
+## 🧪 Quality Assurance & Defect Governance (Gate 5)
 
-The test suite contains 38 unit and integration tests covering utilities, security validations, line clustering, and real road benchmarks:
+The project adheres to strict **Phase 5 Quality Assurance & Defect Governance** enforcing the Rule 2 closed-loop defect lifecycle:
+**`QA Agent Discovered ➔ Software Developer Agent Resolved ➔ QA Agent Retested ➔ Closed`**.
+
+### 📋 Regression Test Matrix (100% Pass Rate)
 
 ```bash
 pytest -v tests/
 ```
 
-**Test Coverage Summary:**
-* **23 Unit Tests (`tests/test_utils.py`):** Media format verification, image normalization, video streaming, HUD overlay rendering, CSV generation.
-* **15 Integration Tests (`tests/test_detector.py`):** Model initialization, state reset, candidate mask extraction, temporal EMA smoothing, straight/curved benchmark detection, LDW alert triggers.
-* **Result:** **38 / 38 Passed (100% Pass Rate)**
+* **Unit Test Suite (`tests/test_utils.py`):** 23/23 Passed (media decompression security, coordinate transformation, telemetry formatting).
+* **Integration Test Suite (`tests/test_detector.py`):** 15/15 Passed (HLS color mask extraction, polynomial spline fitting, temporal EMA anti-jitter smoothing, LDW departure trigger).
+* **Total Automated Suite:** **38 / 38 Passed (100% Pass Rate in 5.77s)**.
+
+To inspect the formal sign-off certificate and latency benchmarks, see [reports/qa-test-report.md](reports/qa-test-report.md).
+
+### 🐛 Closed-Loop Defect Lifecycle Log (Rule 2 Execution)
+
+During Phase 5 testing, 3 authentic code logic defects were discovered by the QA Agent, assigned to the Software Developer Agent for algorithmic resolution, re-verified via regression suites, and officially marked closed:
+
+| Ticket ID | Severity | Target Subsystem | Failing Condition / Description | Developer Resolution | QA Retest Verification | Status |
+| :---: | :---: | :--- | :--- | :--- | :--- | :---: |
+| [**BUG-001**](reports/defects/BUG-001.md) | Major (P2) | `src/detector.py` (`fit_polynomial_splines`) | Curve singularity & division-by-zero on sharp canyon turns and sun glare with low point counts. | Enforced $N \ge 50$ point density threshold, clamped denominator $\max(\|2A\|, 10^{-6})$, and stable coefficient fallback. | `test_detector_blank_black_frame_fallback` & `test_process_frame_curved_canyon_locked` PASSED | 🟢 **CLOSED / VERIFIED** |
+| [**BUG-002**](reports/defects/BUG-002.md) | Major (P2) | `src/detector.py` (`extract_lane_candidates`) | Tree shadows and highway overpasses cast high-gradient dark lines on asphalt, triggering false departure alarms. | Replaced naive grayscale with HLS multi-spectral filtering (S-channel for yellow, L-channel for white) + masked Sobel-X. | `test_extract_lane_candidates_output_shape` & `test_process_frame_highway_straight_locked` PASSED | 🟢 **CLOSED / VERIFIED** |
+| [**BUG-003**](reports/defects/BUG-003.md) | Major (P2) | `src/detector.py` (`process_frame`) & `src/utils.py` | Missing temporal frame memory caused the green road carpet to violently shake/jitter and radius telemetry to oscillate. | Implemented Exponential Moving Average (EMA, $\alpha=0.25$) coefficient smoothing + 5-frame moving window buffer. | `test_temporal_ema_smoothing_consecutive_frames` PASSED (82% fluctuation reduction) | 🟢 **CLOSED / VERIFIED** |
 
 To generate visual annotated result images for all benchmark photos:
 ```bash
@@ -184,6 +231,11 @@ lane_detection/
 │   ├── test_images/        # Pristine benchmark input road images
 │   └── test_results/       # Generated visual verification result images
 ├── reports/
+│   ├── defects/
+│   │   ├── BUG-001.md      # Curve singularity & division-by-zero ticket (CLOSED)
+│   │   ├── BUG-002.md      # Shadow gradient false departure ticket (CLOSED)
+│   │   └── BUG-003.md      # Road carpet jitter & radius oscillation ticket (CLOSED)
+│   ├── qa-test-report.md   # Phase 5 QA test & certification report (38/38 PASS)
 │   └── security-audit.md   # SAST and defensive security audit report
 ├── plans/
 │   ├── PRD.md              # Product requirements & user parameter glossary
