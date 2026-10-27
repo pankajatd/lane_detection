@@ -231,6 +231,43 @@ The system serializes every frame into standard RFC 4180 CSV logs with the follo
 
 ---
 
-## 8. Conclusion & Sign-Off
+## 8. Defensive Security Architecture & Vulnerability Mitigations (Phase 6 Alignment)
+
+To guarantee 24/7 autonomous driving telemetry resilience and eliminate cybersecurity vulnerabilities, the system embeds six defense-in-depth security layers:
+
+### 8.1 Image Decompression Bomb & Stream Denial-of-Service (DoS) Defense
+* **Threat Model:** Malicious upload of crafted image bombs or infinite video streams exhausting memory and stalling the ADAS telemetry pipeline.
+* **Architectural Defense:**
+  - In `src/utils.py`, `PIL.Image.MAX_IMAGE_PIXELS` is strictly capped at `50_000_000` (50 Megapixels).
+  - Video stream processing in `extract_video_frame_iterator` is strictly bounded by `max_frames` parameter limits (default 450 frames / ~15s video), preventing runaway iteration loops.
+
+### 8.2 Arbitrary Code Execution (ACE) & Shell Injection Elimination
+* **Threat Model:** Exploitation of system commands or dynamic code evaluation via user-supplied video file names or stream metadata.
+* **Architectural Defense:**
+  - 100% elimination of all dynamic evaluation primitives: zero `eval()`, `exec()`, `os.system()`, or `subprocess` calls across `src/`.
+  - All video decoding and geometric road projections use in-memory OpenCV buffers without invoking external CLI binaries such as `ffmpeg`.
+
+### 8.3 CSV Spreadsheet & Formula Injection (DDE) Sanitization
+* **Threat Model:** Automotive telematics logs (`lane_telemetry.csv`) opened by safety auditors in Microsoft Excel could execute malicious formulas if cells begin with `=, +, -, @`.
+* **Architectural Defense:**
+  - `format_telemetry_csv` strictly types and sanitizes all fields before writing.
+  - Dangerous leading formula operators (`=`, `+`, `-`, `@`) are stripped or escaped with a protective single quote (`'`), guaranteeing inert spreadsheet display.
+
+### 8.4 Temporary File Lifecycle Isolation
+* **Threat Model:** Uploaded video bytes written to temporary storage could leak disk space or leave orphaned files.
+* **Architectural Defense:**
+  - All video byte stream ingestion uses `tempfile.NamedTemporaryFile` with deterministic cleanup enclosed in `try ... finally: os.remove(temp_file_path)`.
+
+### 8.5 Numerical Underflow & Division-by-Zero Hardening
+* **Threat Model:** Parallel lane lines or degenerate curvature radii causing zero-division exceptions in road geometry estimators.
+* **Architectural Defense:**
+  - Offset and curvature calculations are clamped with `1e-6` epsilon damping and minimum bounds (`max(100.0, ...)`), strictly constraining output between `[150.0m, 2500.0m]`.
+
+### 8.6 Supply Chain & Container Security
+* Production dependencies screened against the Python Safety Database. Multi-stage Docker container runs under an unprivileged `appuser` (UID 1000).
+
+---
+
+## 9. Conclusion & Sign-Off
 
 The Real-Time Deep Learning Road Lane Detection System represents a robust, maintainable, and human-friendly ADAS solution. By decoupling perception from visualization, enforcing defensive security practices, and providing plain-English telemetry guidance, the system is fully prepared for enterprise deployment and customer handover.
